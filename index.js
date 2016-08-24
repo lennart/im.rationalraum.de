@@ -33,8 +33,8 @@ function next() {
 }
 
 function track(e) {
-  points[next()] = e.clientX;
-  points[next()] = e.clientY;
+  points[next()] = e.clientX / window.innerWidth;
+  points[next()] = 1 - (e.clientY / window.innerHeight);
   ui.$.print();  
 }
 

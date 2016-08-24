@@ -2,7 +2,7 @@ module.exports = {
   init: function init() {
     // Load mathbox with controls
     var mathbox = mathBox({
-      plugins: ['core', 'cursor', 'stats'],
+      plugins: ['core', 'cursor', 'controls', 'stats'],
       controls: {
         klass: THREE.OrbitControls,
       },
@@ -15,10 +15,10 @@ module.exports = {
     three.renderer.setClearColor(new THREE.Color(0xffffff), 1.0);
     
     // Set mathbox units and place camera
-//    mathbox.set({ scale: 720, focus: 1 });
-    mathbox.camera({ proxy: true, position: [0, 0, 3] });
+//    mathbox.set({ scale: 100, focus: 1 });
+    mathbox.camera({ proxy: true, position: [0, 0, 1] });
 
-    var view = this.viewed(mathbox, window.innerWidth, window.innerhHeight);
+    var view = this.viewed(mathbox, window.innerWidth, window.innerHeight);
     
     this.fielded(view);
 
@@ -47,23 +47,30 @@ module.exports = {
   },
   viewed: function viewed(mb, w, h) {
     // Create cartesian view
+    var ratio = w / h;
     return mb.cartesian({
-      range: [[0, w], [0, h]],
-      scale: [1, 1],
+      range: [[0, 1], [0, 1], [0,1]],
+      scale: [w/h, 1, 1],
     });
+    // return mb.cartesian({
+    //   range: [[0, w], [0, h]],
+    //   scale: [1, 1],
+    // });
   },
   fielded: function fielded(view) {
     view
-      .array({
+      .matrix({
         id: 'field',
         data: [],
-        width: 512,
-        channels: 2
+        width: 32,
+        height: 32,
+        channels: 2,
+        items: 2
       })
-      // .swizzle({
-      //   source: '#field',
-      //   order: 'xy'
-      // })
+      .swizzle({
+//        source: '#field',
+        order: 'yxz'
+      })
       // .line({
       //   width: 500,
       //   color: 0xFF00ff,
@@ -79,13 +86,13 @@ module.exports = {
       //   //   emit(x, -y, z);
       //   // }
       // })
-      .point({
+      .vector({
         color: [68/255, 174/255, 218/255],
-        size: 4,
+        width: 4,
 //        blending: 'add',
-        opacity: .5,
-        zWrite: false,
-        zTest: false,
+        opacity: 1,
+        // zWrite: false,
+        // zTest: false,
       });
   },
   animations: {
