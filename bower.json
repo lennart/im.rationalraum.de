@@ -1,0 +1,21 @@
+{
+  "name": "orga-viz",
+  "authors": [
+    "Lennart Melzer <lennart@melzer.it>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "mathbox": "^0.0.5"
+  }
+}
