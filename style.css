@@ -1,0 +1,17 @@
+body {
+  user-select: none;
+  overflow: hidden;
+}
+
+#log {
+  position: fixed;
+  top: 0;
+  right: 0;
+  background-color: black;
+  color: white;
+  font-weight: bold;
+  font-family: monospace;
+  font-size: 0.8em;
+  width: 10em;
+  overflow-x: hidden;
+}

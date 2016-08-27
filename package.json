@@ -1,0 +1,34 @@
+{
+  "name": "drawndive",
+  "version": "0.0.1",
+  "description": "draw stuff as points in space, while transforming space",
+  "main": "index.js",
+  "dependencies": {
+    "appcache-webpack-plugin": "^1.3.0"
+  },
+  "devDependencies": {
+    "appcache-webpack-plugin": "^1.3.0",
+    "autoprefixer": "^6.4.0",
+    "css-loader": "^0.24.0",
+    "postcss-loader": "^0.11.0",
+    "precss": "^1.4.0",
+    "style-loader": "^0.13.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lennart/drawndive.git"
+  },
+  "keywords": [
+    "math",
+    "visual"
+  ],
+  "author": "Lennart Melzer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lennart/drawndive/issues"
+  },
+  "homepage": "https://github.com/lennart/drawndive#readme"
+}

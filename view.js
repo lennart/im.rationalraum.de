@@ -2,7 +2,11 @@ module.exports = {
   init: function init() {
     // Load mathbox with controls
     var mathbox = mathBox({
-      plugins: ['core', 'cursor', 'controls', 'stats'],
+      plugins: [
+        'core',
+        'cursor',
+        //'controls',
+        'stats'],
       controls: {
         klass: THREE.OrbitControls,
       },
@@ -16,7 +20,7 @@ module.exports = {
     
     // Set mathbox units and place camera
 //    mathbox.set({ scale: 100, focus: 1 });
-    mathbox.camera({ proxy: true, position: [0, 0, 1] });
+    mathbox.camera({ proxy: true, position: [0, 0, 1.5] });
 
     var view = this.viewed(mathbox, window.innerWidth, window.innerHeight);
     
@@ -42,6 +46,7 @@ module.exports = {
     return {
       view: view,
       field: view.select('#field'),
+      orient: view.select('#orient'),
       $: mathbox
     };
   },
@@ -49,7 +54,7 @@ module.exports = {
     // Create cartesian view
     var ratio = w / h;
     return mb.cartesian({
-      range: [[0, 1], [0, 1], [0,1]],
+      range: [[-1, 1], [-1, 1], [-1,1]],
       scale: [w/h, 1, 1],
     });
     // return mb.cartesian({
@@ -59,6 +64,10 @@ module.exports = {
   },
   fielded: function fielded(view) {
     view
+      .transform({
+        id: 'orient',
+        rotation: [0,0,0]
+      })
       .matrix({
         id: 'field',
         data: [],
@@ -93,7 +102,9 @@ module.exports = {
         opacity: 1,
         // zWrite: false,
         // zTest: false,
-      });
+      })
+      // .play({
+      // });
   },
   animations: {
     helix: function(id, view, start, params) {
