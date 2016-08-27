@@ -1,0 +1,13 @@
+CACHE MANIFEST
+# a7fa10a4fc96969061f5
+
+bundle.js
+
+CACHE:
+bower_components/mathbox/build/mathbox-bundle.js
+
+FALLBACK:
+fail.png
+
+SETTINGS:
+prefer-online

@@ -21,10 +21,20 @@ function orientate(win) {
   }
 }
 
-function full
+function fullscreen(el) {
+  el.webkitRequestFullscreen();
+}
+
+function gofullscreen(el) {
+  return function() {
+    el.removeEventListener('click', gofullscreen);
+    fullscreen(document.documentElement);
+  };
+}
 
 function setup(el, win) {
-  fullscreen(el);
+//  el.addEventListener('click', gofullscreen);
+
   orientate(win);
   events.forEach(function(e) {
     el.addEventListener(e, track);
