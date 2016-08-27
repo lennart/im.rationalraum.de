@@ -79,8 +79,6 @@
 	}
 
 	function setup(el, win) {
-	//  el.addEventListener('click', gofullscreen);
-
 	  orientate(win);
 	  events.forEach(function(e) {
 	    el.addEventListener(e, track);
