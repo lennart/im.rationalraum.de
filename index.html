@@ -7,7 +7,36 @@
 
   </head>
   <body>
-    <output id="log">
+    <output id="log"></output>
+    <textarea id="editor" autofocus>
+      camera()
+
+      viewer()
+      .voxel({
+        width: 3 * 128,
+        channels: 3,
+        expr: function(emit, i,j,time, delta) {
+          emit(points[i], points[j], Math.sin(time));
+        },
+        items: 3
+      })
+      .interval({
+         id: 'field',
+         width: lookback,
+         channels: 3, 
+         items: 3
+      })
+      .swizzle({
+        order: 'yxz'
+      })
+      .vector({
+        opacity: 1,
+        width: 3,
+        color: [68/255, 174/255, 218/255],
+      })
+    </textarea>
+    <output id="error"></output>
+    <button type="button" id="eval">eval</button>
     <script src="bundle.js"></script>
   </body>
 </html>
