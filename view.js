@@ -5,7 +5,7 @@ module.exports = {
       plugins: [
         'core',
         'cursor',
-        //'controls',
+        // 'controls',
         'stats'],
       controls: {
         klass: THREE.OrbitControls,
@@ -16,7 +16,7 @@ module.exports = {
     // Set renderer background
     var three = mathbox.three;
     three.renderer.setClearColor(new THREE.Color(0xffffff), 1.0);
-    this.$ = mathbox;
+    this.$ = this.mathbox = mathbox;    
     return this;
   },
   camera: function camera() {
@@ -30,22 +30,22 @@ module.exports = {
         range: [[-1, 1], [-1, 1], [-1,1]],
         scale: [w/h, 1, 1],
       })
-      .axis({
-        axis: 1,
-        width: 3
-      })
-      .axis({
-        axis: 2,
-        width: 3
-      })
-      .axis({
-        axis: 3,
-        width: 3
-      })
-      .grid({
-        width: 2,
-        divideX: 20,
-        divideY: 20      
-      });
+      // .axis({
+      //   axis: 1,
+      //   width: 3
+      // })
+      // .axis({
+      //   axis: 2,
+      //   width: 3
+      // })
+      // .axis({
+      //   axis: 3,
+      //   width: 3
+      // })
+      // .grid({
+      //   width: 2,
+      //   divideX: 20,
+      //   divideY: 20      
+      // });
   }
 };

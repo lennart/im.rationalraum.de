@@ -49,13 +49,14 @@
 	    css = __webpack_require__(3),
 	    v = view.init(),
 	    el = document.body,
-	    lookback = 3 * 128,
-	    points = new Float32Array(lookback),
-	    tick = 0,
+	    lookback = 32,
+	    touchhistory = [0,1,2,3,4].map(function(x) { return new Float32Array(lookback); }),
+	    ticker = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 },
 	    events = ['mousemove', 'touchmove'],
 	    editor = document.querySelector("#editor"),
 	    err = document.querySelector("#error"),     
 	    log = document.querySelector("#log"),
+	    input = document.querySelector("#input"),
 	    orientation = [0,0,0];
 
 	function orientate(win) {
@@ -81,6 +82,7 @@
 	function setup(el, win) {
 	  var editor = el.querySelector("#editor"),
 	      button = el.querySelector("#eval");
+	  input.addEventListener('input', showLast(err));
 	  editor.addEventListener('keydown', shiftReturn(replaceF));
 	  button.addEventListener('click', replaceF);
 	  orientate(win);
@@ -89,6 +91,11 @@
 	  });
 	}
 
+	function showLast(el) {
+	  return function(e) {
+	    el.scrollTop = el.scrollHeight;
+	  };
+	}
 
 	function shiftReturn(f) {
 	  return function(e) {
@@ -101,22 +108,23 @@
 	}
 
 	function replaceF(e) {
-	  var res, text = editor.innerHTML;
+	  var res, text = editor.value;
 	  try {
 	    shuffle(v.$);
+	    err.innerText += "[eval>] " + text + "\n";
 	    res = eval(text);
-	    err.innerText += res;
+	    err.innerText += "[eval<] " + res + "\n";
 	  }
 	  catch (e) {
 	    err.innerText += e.toString();
-	  }    
+	  }
+	  input.dispatchEvent(new Event("input"));
 	  e.preventDefault(true);
 	}
 
-
-	function next() {
-	  tick = (tick + 1) % lookback;
-	  return tick;
+	function advance(state, i, size) {
+	  state[i] = (state[i] + 1) % size;
+	  return state[i];
 	}
 
 	function orient(e) {
@@ -139,13 +147,22 @@
 	    .map(function(x) { return THREE.Math.degToRad(x); });  
 	}
 
+	function applyorient(x, y, z) {
+	    p = new THREE.Vector3(x, y, z);
+	    a = new THREE.Euler(orientation[0],
+	                        orientation[1],
+	                        orientation[2]);
+	  p.applyEuler(a);
+	  return p;
+	}
+
 	function track(e) {
 	  var i = 0, touches = e.touches, t, x, y, p, a;
 	  e.preventDefault(true);
 	  if (!touches) {
 	    touches = [e];
 	  }
-	  for (i = 0; i < touches.length; i++) {
+	  for (i = 0; i < Math.min(touchhistory.length, touches.length); i++) {
 	    t = touches[i];
 	    x = t.clientX / window.innerWidth;
 	    x *= 2;
@@ -153,34 +170,41 @@
 	    y = t.clientY / window.innerHeight;
 	    y *= -2;
 	    y += 1;
-	    p = new THREE.Vector3(x, y, 0);
-	    a = new THREE.Euler(orientation[0],
-	                        orientation[1],
-	                        orientation[2]);
-	    p.applyEuler(a);
-	    points[next()] = p.x
-	    points[next()] = p.y
-	    points[next()] = p.z
+	    touchhistory[i][advance(ticker, i, lookback)] = x;
+	    touchhistory[i][advance(ticker, i, lookback)] = y;
 	  }
 	}
 
-	// erase current root
 	function shuffle($) {
-	  debugger;
-	  $.remove("root")
-	  debugger;
+	  $.remove("*")
+	}
+
+	function emitter(m, n, max) {
+	  return function (emit, x, y, t) {
+	    var st = 0.25 * Math.sin(t),
+	        px = m[n][x % max],
+	        py = m[n][(x+1) % max],
+	        pz = st;
+	        p = rot(px,py,pz);
+	    emit(p.x, p.y, p.z, 1);    
+	  };
 	}
 
 	cache.init(window);
-
 	setup(el, window);
-	window.points = points;
-	//console.log("[mb]", mb);
 
-	window.lookback = lookback;
-	window.viewer = v.viewer;
+	// DSL
+	window.m = touchhistory;
+	window.max = lookback;
+	window.viewer = function() {
+	  return v.viewer(window.innerWidth,window.innerHeight)
+	};
+	window.stream = function(n) {
+	  return emitter(touchhistory, n, lookback);
+	};
 	window.camera = v.camera;
-
+	window.orientation = orientation;
+	window.rot = applyorient;
 
 
 /***/ },
@@ -194,7 +218,7 @@
 	      plugins: [
 	        'core',
 	        'cursor',
-	        //'controls',
+	        // 'controls',
 	        'stats'],
 	      controls: {
 	        klass: THREE.OrbitControls,
@@ -205,7 +229,7 @@
 	    // Set renderer background
 	    var three = mathbox.three;
 	    three.renderer.setClearColor(new THREE.Color(0xffffff), 1.0);
-	    this.$ = mathbox;
+	    this.$ = this.mathbox = mathbox;    
 	    return this;
 	  },
 	  camera: function camera() {
@@ -219,23 +243,23 @@
 	        range: [[-1, 1], [-1, 1], [-1,1]],
 	        scale: [w/h, 1, 1],
 	      })
-	      .axis({
-	        axis: 1,
-	        width: 3
-	      })
-	      .axis({
-	        axis: 2,
-	        width: 3
-	      })
-	      .axis({
-	        axis: 3,
-	        width: 3
-	      })
-	      .grid({
-	        width: 2,
-	        divideX: 20,
-	        divideY: 20      
-	      });
+	      // .axis({
+	      //   axis: 1,
+	      //   width: 3
+	      // })
+	      // .axis({
+	      //   axis: 2,
+	      //   width: 3
+	      // })
+	      // .axis({
+	      //   axis: 3,
+	      //   width: 3
+	      // })
+	      // .grid({
+	      //   width: 2,
+	      //   divideX: 20,
+	      //   divideY: 20      
+	      // });
 	  }
 	};
 
@@ -298,7 +322,7 @@
 
 
 	// module
-	exports.push([module.id, "body {\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n  overflow: hidden;\n}\n\n#log {\n  position: fixed;\n  top: 0;\n  right: 0;\n  background-color: black;\n  color: white;\n  font-weight: bold;\n  font-family: monospace;\n  font-size: 0.8em;\n  width: 10em;\n  overflow-x: hidden;\n}\n\n#editor {\n  position: fixed;\n  bottom: 0;\n  left: 0;\n  top: 0;\n  right: 0;\n  font-size: 2em;\n  width: 100%;\n  overflow: hidden;\n  padding-top: 40px;\n  background-color: rgba(0,0,0,0.3);\n  font-family: monospace;\n  color: white;\n  text-shadow: 1px 1px rgba(0,0,0,0.8);\n}\n\n#error {\n  position: fixed;\n  z-index: 100;\n  right: 0;\n  bottom: 0;\n  top: 0;\n  width: 50%;\n  overflow: hidden;\n  background-color: rgba(255,0,0,0.3);\n  color: white;\n  font-family: monospace;\n  font-size: 1.2em;\n}\n\n#eval {\n  position: fixed;\n  z-index: 1000;\n  right: 0;\n  bottom: 0;\n  \n}", ""]);
+	exports.push([module.id, "body {\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n  overflow: hidden;\n}\n\n* {\n  font-family: monospace;\n}\n\n#log {\n  position: fixed;\n  top: 0;\n  right: 0;\n  background-color: black;\n  color: white;\n  font-weight: bold;\n  font-size: 0.8em;\n  width: 10em;\n  overflow-x: hidden;\n}\n\n#editor {\n  position: fixed;\n  bottom: 0;\n  left: 0;\n  top: 0;\n  right: 0;\n  font-size: 1.6em;\n  width: 100%;\n  overflow: hidden;\n  padding-top: 40px;\n  background-color: rgba(0,0,0,0.2);\n  color: #111;\n  text-shadow: 2px 1px rgba(255,255,255,0.99);\n}\n\n#error {\n  position: fixed;\n  z-index: 100;\n  right: 0;\n  bottom: 0;\n  top: 0;\n  width: 33%;\n  overflow-x: hidden;\n  overflow-y: auto;\n  color: rgba(255,10,10,0.9);\n  background-color: rgba(255,255,255,0.8);\n  font-size: 1.2em;\n  font-weight: bold;\n  text-shadow: 1px 1px 0 white;\n}\n\n#eval {\n  position: fixed;\n  z-index: 1000;\n  right: 0;\n  bottom: 0;\n  \n}", ""]);
 
 	// exports
 

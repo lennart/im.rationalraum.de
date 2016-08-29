@@ -3,6 +3,10 @@ body {
   overflow: hidden;
 }
 
+* {
+  font-family: monospace;
+}
+
 #log {
   position: fixed;
   top: 0;
@@ -10,7 +14,6 @@ body {
   background-color: black;
   color: white;
   font-weight: bold;
-  font-family: monospace;
   font-size: 0.8em;
   width: 10em;
   overflow-x: hidden;
@@ -22,14 +25,13 @@ body {
   left: 0;
   top: 0;
   right: 0;
-  font-size: 2em;
+  font-size: 1.6em;
   width: 100%;
   overflow: hidden;
   padding-top: 40px;
-  background-color: rgba(0,0,0,0.3);
-  font-family: monospace;
-  color: white;
-  text-shadow: 1px 1px rgba(0,0,0,0.8);
+  background-color: rgba(0,0,0,0.2);
+  color: #111;
+  text-shadow: 2px 1px rgba(255,255,255,0.99);
 }
 
 #error {
@@ -38,12 +40,14 @@ body {
   right: 0;
   bottom: 0;
   top: 0;
-  width: 50%;
-  overflow: hidden;
-  background-color: rgba(255,0,0,0.3);
-  color: white;
-  font-family: monospace;
+  width: 33%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  color: rgba(255,10,10,0.9);
+  background-color: rgba(255,255,255,0.8);
   font-size: 1.2em;
+  font-weight: bold;
+  text-shadow: 1px 1px 0 white;
 }
 
 #eval {

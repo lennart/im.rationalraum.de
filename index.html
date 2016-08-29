@@ -4,39 +4,68 @@
     <meta charset="UTF-8"/>
     <title>draw something, then move around, repeat</title>
     <script src="bower_components/mathbox/build/mathbox-bundle.js"></script>
+    <script type="application/glsl" id="resample-shader">
+        uniform vec3 dataResolution;   // inverse dimensions (sample-adjusted)
+  uniform vec3 dataSize;         // dimensions
+  uniform vec3 targetResolution; //
+  uniform vec3 targetSize;       //
 
+  vec4 getSample(vec3 xyz);         // indices 3, channels 4
+  vec4 getFramesSample(vec3 xyz) {  //
+    return getSample(xyz);          //
+  }
+    </script>
   </head>
   <body>
-    <output id="log"></output>
-    <textarea id="editor" autofocus>
-      camera()
+    <form id="input">
+      <output id="log"></output>
+      <textarea id="editor" autofocus  spellcheck="false">
+camera()
 
-      viewer()
-      .voxel({
-        width: 3 * 128,
-        channels: 3,
-        expr: function(emit, i,j,time, delta) {
-          emit(points[i], points[j], Math.sin(time));
-        },
-        items: 3
-      })
-      .interval({
-         id: 'field',
-         width: lookback,
-         channels: 3, 
-         items: 3
-      })
-      .swizzle({
-        order: 'yxz'
-      })
-      .vector({
-        opacity: 1,
-        width: 3,
-        color: [68/255, 174/255, 218/255],
-      })
+viewer()
+.transform({ rotation: orientation })
+.matrix({
+  id: "first",
+  history: max,
+  expr: stream(0),
+  width: 24, height: 24,
+})
+.matrix({
+  id: "second",
+  history: max,
+  expr: stream(1),
+  width: 24, height: 24,
+})
+.matrix({
+  id: "third",
+  history: max,
+  expr: stream(2),
+  width: 24, height: 24,
+})
+.grow({id:"sizes", scale: 25, width: 50}).end()
+.shader({
+  sources: ["#third"],
+  code: "#resample-shader"
+})
+.resample({
+  indices: 3,
+  channels: 4,
+})
+.point({
+  points: "#first",
+  colors: "#second",
+  color: '#ffffff',
+})
+
+
+mathbox.select('transform')
+.bind('rotation', function(time, delta) {
+ return orientation;
+})     
     </textarea>
     <output id="error"></output>
     <button type="button" id="eval">eval</button>
+    </form>
     <script src="bundle.js"></script>
   </body>
 </html>
