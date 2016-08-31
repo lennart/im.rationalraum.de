@@ -30,22 +30,5 @@ module.exports = {
         range: [[-1, 1], [-1, 1], [-1,1]],
         scale: [w/h, 1, 1],
       })
-      // .axis({
-      //   axis: 1,
-      //   width: 3
-      // })
-      // .axis({
-      //   axis: 2,
-      //   width: 3
-      // })
-      // .axis({
-      //   axis: 3,
-      //   width: 3
-      // })
-      // .grid({
-      //   width: 2,
-      //   divideX: 20,
-      //   divideY: 20      
-      // });
   }
 };

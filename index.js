@@ -8,9 +8,10 @@ var view = require('./view'),
     ticker = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 },
     events = ['mousemove', 'touchmove'],
     editor = document.querySelector("#editor"),
-    err = document.querySelector("#error"),     
+    err = document.querySelector("#error"),
     log = document.querySelector("#log"),
     input = document.querySelector("#input"),
+    preset = document.querySelector("#preset"),
     orientation = [0,0,0];
 
 function orientate(win) {
@@ -35,7 +36,10 @@ function gofullscreen(el) {
 
 function setup(el, win) {
   var editor = el.querySelector("#editor"),
-      button = el.querySelector("#eval");
+      button = el.querySelector("#eval"),
+      pathname = win.location.pathname;
+
+  preset.addEventListener('change', load);
   input.addEventListener('input', showLast(err));
   editor.addEventListener('keydown', shiftReturn(replaceF));
   button.addEventListener('click', replaceF);
@@ -43,6 +47,12 @@ function setup(el, win) {
   events.forEach(function(e) {
     el.addEventListener(e, track);
   });
+}
+
+function load(e) {
+  var s = this;
+
+  loadpreset(s.value);
 }
 
 function showLast(el) {
@@ -61,17 +71,20 @@ function shiftReturn(f) {
   };
 }
 
-function replaceF(e) {
-  var res, text = editor.value;
+function replaceRoot(text) {
+  var res;
   try {
     shuffle(v.$);
-    err.innerText += "[eval>] " + text + "\n";
     res = eval(text);
     err.innerText += "[eval<] " + res + "\n";
   }
   catch (e) {
     err.innerText += e.toString();
   }
+}
+
+function replaceF(e) {
+  replaceRoot(editor.value);
   input.dispatchEvent(new Event("input"));
   e.preventDefault(true);
 }
@@ -96,9 +109,9 @@ function orientprime(e) {
   log.innerText = "gamma: " + e.gamma + "\n"
     + "beta: "
     + e.beta + "\n"
-    + "alpha: " + e.alpha;  
+    + "alpha: " + e.alpha;
   orientation = [e.beta, e.alpha, e.gamma]
-    .map(function(x) { return THREE.Math.degToRad(x); });  
+    .map(function(x) { return THREE.Math.degToRad(x); });
 }
 
 function applyorient(x, y, z) {
@@ -133,28 +146,54 @@ function shuffle($) {
   $.remove("*")
 }
 
-function emitter(m, n, max) {
+function emitter(m, n, f) {
   return function (emit, x, y, t) {
-    var st = 0.25 * Math.sin(t),
-        px = m[n][x % max],
-        py = m[n][(x+1) % max],
+    var st = f(t),
+        px = m[n][x],
+        py = m[n][(x+1)],
         pz = st;
         p = rot(px,py,pz);
-    emit(p.x, p.y, p.z, 1);    
+    emit(p.x, p.y, p.z, 1);
   };
 }
+
 
 cache.init(window);
 setup(el, window);
 
+// routes
+function loadpreset(path) {
+  var req = new XMLHttpRequest();
+
+  req.open('GET', path, true);
+  req.addEventListener('readystatechange', function() {
+    if (req.readyState === XMLHttpRequest.DONE) {
+      if (req.status === 200) {
+        err.innerText += "[js:load] " + path + "\n";
+        editor.innerHTML = req.responseText;
+      }
+      else {
+        err.innerText += "[js:err:code " + req.status + " <]\n";
+      }
+    }
+    else {
+      err.innerText += "[js:err:state <]" + req.readyState + "\n"; 
+    }
+  });
+  req.send();
+}
+
+loadpreset(preset.value);
+
 // DSL
+window.v = v;
 window.m = touchhistory;
 window.max = lookback;
 window.viewer = function() {
   return v.viewer(window.innerWidth,window.innerHeight)
 };
-window.stream = function(n) {
-  return emitter(touchhistory, n, lookback);
+window.stream = function(n,f) {
+  return emitter(touchhistory, n, f);
 };
 window.camera = v.camera;
 window.orientation = orientation;

@@ -1,10 +1,13 @@
 CACHE MANIFEST
-# 58da8a45525dc173593f
+# 123745a02d5d7d789cc7
 
 bundle.js
 
 CACHE:
 bower_components/mathbox/build/mathbox-bundle.js
+presets/points.js
+presets/surface.js
+presets/water.js
 
 FALLBACK:
 fail.png

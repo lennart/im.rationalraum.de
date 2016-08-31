@@ -12,11 +12,20 @@ body {
   top: 0;
   right: 0;
   background-color: black;
-  color: white;
+  color: #eee;
   font-weight: bold;
   font-size: 0.8em;
   width: 10em;
   overflow-x: hidden;
+}
+
+#preset {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: 200px;
+  margin-left: -100px;
+  z-index: 100;
 }
 
 #editor {
@@ -38,7 +47,7 @@ body {
   position: fixed;
   z-index: 100;
   right: 0;
-  bottom: 0;
+  bottom: 33%;
   top: 0;
   width: 33%;
   overflow-x: hidden;

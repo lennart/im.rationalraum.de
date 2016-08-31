@@ -1,9 +1,20 @@
 <!doctype html>
-<html lang="en" manifest="dnd.appcache">
+<html lang="en" manifest="/dnd.appcache">
   <head>
     <meta charset="UTF-8"/>
     <title>draw something, then move around, repeat</title>
-    <script src="bower_components/mathbox/build/mathbox-bundle.js"></script>
+    <script src="/bower_components/mathbox/build/mathbox-bundle.js"></script>
+    <script type="application/glsl" id="rtt-water">
+     vec4 getSample(vec3 xyz);
+     vec4 getFramesSample(vec3 xyz) {
+       vec4 c = getSample(xyz + vec3( 0.0, 0.0, 1.0));
+       vec3 t = getSample(xyz + vec3( 0.0, 1.0, 0.0)).xyz;
+       vec3 b = getSample(xyz + vec3( 0.0,-1.0, 0.0)).xyz;
+       vec3 l = getSample(xyz + vec3(-1.0, 0.0, 0.0)).xyz;
+       vec3 r = getSample(xyz + vec3( 1.0, 0.0, 0.0)).xyz;
+       return vec4((t + b + l + r) / 2.0 - c.xyz, c.w);
+     }
+    </script>
     <script type="application/glsl" id="resample-shader">
         uniform vec3 dataResolution;   // inverse dimensions (sample-adjusted)
   uniform vec3 dataSize;         // dimensions
@@ -19,53 +30,16 @@
   <body>
     <form id="input">
       <output id="log"></output>
+      <select id="preset">
+        <option value="/presets/points.js">Points</option>
+        <option value="/presets/surface.js">Surface</option>
+        <option value="/presets/water.js">Water</option>                
+      </select>
       <textarea id="editor" autofocus  spellcheck="false">
-camera()
-
-viewer()
-.transform({ rotation: orientation })
-.matrix({
-  id: "first",
-  history: max,
-  expr: stream(0),
-  width: 24, height: 24,
-})
-.matrix({
-  id: "second",
-  history: max,
-  expr: stream(1),
-  width: 24, height: 24,
-})
-.matrix({
-  id: "third",
-  history: max,
-  expr: stream(2),
-  width: 24, height: 24,
-})
-.grow({id:"sizes", scale: 25, width: 50}).end()
-.shader({
-  sources: ["#third"],
-  code: "#resample-shader"
-})
-.resample({
-  indices: 3,
-  channels: 4,
-})
-.point({
-  points: "#first",
-  colors: "#second",
-  color: '#ffffff',
-})
-
-
-mathbox.select('transform')
-.bind('rotation', function(time, delta) {
- return orientation;
-})     
     </textarea>
     <output id="error"></output>
     <button type="button" id="eval">eval</button>
     </form>
-    <script src="bundle.js"></script>
+    <script src="/bundle.js"></script>
   </body>
 </html>
