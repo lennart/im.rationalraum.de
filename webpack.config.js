@@ -19,9 +19,11 @@ module.exports = {
   plugins: [
     new AppCachePlugin({
       cache: ['bower_components/mathbox/build/mathbox-bundle.js',
+              'presets/water.js',
               'presets/points.js',
               'presets/surface.js',
-              'presets/water.js'],
+              'presets/ast.js'
+             ],
       network: null,
       fallback: ['fail.png'],
       settings: ['prefer-online'],
@@ -35,6 +37,7 @@ module.exports = {
   resolve: {
     modulesDirectories: ["bower_components", "node_modules"],
     alias: {
+      
     }
   },
   

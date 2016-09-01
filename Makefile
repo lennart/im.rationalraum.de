@@ -1,4 +1,4 @@
-deploy:
+fdeploy:
 	rsync -urlv . xenakis:/var/www/im.rationalraum.de/
 
 

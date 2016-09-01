@@ -5,7 +5,7 @@ module.exports = {
       plugins: [
         'core',
         'cursor',
-        // 'controls',
+        'controls',
         'stats'],
       controls: {
         klass: THREE.OrbitControls,
@@ -16,11 +16,15 @@ module.exports = {
     // Set renderer background
     var three = mathbox.three;
     three.renderer.setClearColor(new THREE.Color(0xffffff), 1.0);
-    this.$ = this.mathbox = mathbox;    
+    this.$ = this.mathbox = mathbox;
     return this;
   },
-  camera: function camera() {
-    this.mathbox.camera({ proxy: true, position: [0, 0, 1.5] });
+  camera: function camera(options) {
+    options = options || {
+      proxy: true,
+      position: [0, 0, 1.5]
+    };
+    this.mathbox.camera(options);
   },
   viewer: function viewer(w, h) {
     // Create cartesian view
@@ -29,6 +33,6 @@ module.exports = {
       .cartesian({
         range: [[-1, 1], [-1, 1], [-1,1]],
         scale: [w/h, 1, 1],
-      })
+      })    
   }
 };

@@ -7,7 +7,12 @@ body {
   font-family: monospace;
 }
 
+#stats {
+  display: none;
+}
+
 #log {
+  display: none;
   position: fixed;
   top: 0;
   right: 0;
@@ -29,26 +34,27 @@ body {
 }
 
 #editor {
+  display: none;
   position: fixed;
   bottom: 0;
   left: 0;
   top: 0;
   right: 0;
-  font-size: 1.6em;
   width: 100%;
   overflow: hidden;
   padding-top: 40px;
+  font-size: 1.6em;
   background-color: rgba(0,0,0,0.2);
   color: #111;
   text-shadow: 2px 1px rgba(255,255,255,0.99);
 }
-
 #error {
+  display: none;
   position: fixed;
   z-index: 100;
   right: 0;
   bottom: 33%;
-  top: 0;
+  top: 100px;
   width: 33%;
   overflow-x: hidden;
   overflow-y: auto;
@@ -64,5 +70,11 @@ body {
   z-index: 1000;
   right: 0;
   bottom: 0;
-  
+}
+
+#editor.enabled,
+#error.enabled,
+#log.enabled,
+#stats.enabled {
+  display: block;
 }

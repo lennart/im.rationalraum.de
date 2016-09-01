@@ -7,13 +7,16 @@
     "appcache-webpack-plugin": "^1.3.0"
   },
   "devDependencies": {
+    "acorn": "^3.3.0",
     "appcache-webpack-plugin": "^1.3.0",
     "autoprefixer": "^6.4.0",
     "css-loader": "^0.24.0",
+    "file-loader": "^0.9.0",
     "navigo": "^2.2.0",
     "postcss-loader": "^0.11.0",
     "precss": "^1.4.0",
-    "style-loader": "^0.13.1"
+    "style-loader": "^0.13.1",
+    "url-loader": "^0.5.7"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

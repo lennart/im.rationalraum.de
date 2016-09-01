@@ -1,18 +1,30 @@
 var view = require('./view'),
     cache = require('./appcache'),
     css = require('./style.css'),
+    acorn = require('acorn'),
+    presets = {
+      ast: require('file!./presets/ast.js'),
+      water: require('file!./presets/water.js'),
+      points: require('file!./presets/points.js'),
+      surface: require('file!./presets/surface.js')
+    },
     v = view.init(),
     el = document.body,
     lookback = 32,
     touchhistory = [0,1,2,3,4].map(function(x) { return new Float32Array(lookback); }),
     ticker = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 },
     events = ['mousemove', 'touchmove'],
+    labels = [],
+    points = [],
     editor = document.querySelector("#editor"),
     err = document.querySelector("#error"),
     log = document.querySelector("#log"),
     input = document.querySelector("#input"),
     preset = document.querySelector("#preset"),
-    orientation = [0,0,0];
+    stats = document.querySelector("#stats"),
+    orientation = [0,0,0],
+    limits = [1,1], // one char
+    edit = false;
 
 function orientate(win) {
   if (window.DeviceOrientationEvent) {
@@ -39,9 +51,10 @@ function setup(el, win) {
       button = el.querySelector("#eval"),
       pathname = win.location.pathname;
 
+  el.addEventListener('keydown', toggleF);
   preset.addEventListener('change', load);
   input.addEventListener('input', showLast(err));
-  editor.addEventListener('keydown', shiftReturn(replaceF));
+  el.addEventListener('keydown', shiftReturn(replaceF));
   button.addEventListener('click', replaceF);
   orientate(win);
   events.forEach(function(e) {
@@ -71,15 +84,69 @@ function shiftReturn(f) {
   };
 }
 
+
+// FIXME: somehow, this will not do what I want and leave labels/points empty afterwards
+function parseNetwork(text) {
+  var ast = acorn.parse(text, {
+    locations: true,
+    sourceFile: text,
+    onToken: store(limits)
+  });
+  // clear existing network
+  labels = [];
+  points = [];
+  function store(lim) {
+    return function(token) {
+      // store token as x,y coords with origin in top-left
+      var col = token.loc.start.column,
+          line = token.loc.start.line;
+      lim[0] = Math.max(lim[0], col); // x
+      lim[1] = Math.max(lim[1], line); // y
+      labels.push(token.value || token.type.label);
+      points.push(col);
+      points.push(line);
+    };
+  }
+
+}
+
+function toggle() {
+  var els = [editor, log, err, stats];
+
+  if (edit) {
+    edit = false;
+    els.forEach(hideDOM);
+  }
+  else {
+    edit = true;
+    els.forEach(showDOM);
+  }
+
+  function showDOM(el) { el.classList.add("enabled"); }
+  function hideDOM(el) {
+    el.classList.remove("enabled");
+  }
+}
+
 function replaceRoot(text) {
   var res;
   try {
     shuffle(v.$);
+    parseNetwork(text);
+    console.log(limits, points, labels);
     res = eval(text);
-    err.innerText += "[eval<] " + res + "\n";
   }
   catch (e) {
     err.innerText += e.toString();
+  }
+}
+
+function toggleF(e) {
+  var code = e.keyCode;
+
+  if (code === 9) {
+    e.preventDefault(true);
+    toggle();
   }
 }
 
@@ -115,10 +182,10 @@ function orientprime(e) {
 }
 
 function applyorient(x, y, z) {
-    p = new THREE.Vector3(x, y, z);
-    a = new THREE.Euler(orientation[0],
-                        orientation[1],
-                        orientation[2]);
+  p = new THREE.Vector3(x, y, z);
+  a = new THREE.Euler(orientation[0],
+                      orientation[1],
+                      orientation[2]);
   p.applyEuler(a);
   return p;
 }
@@ -152,18 +219,18 @@ function emitter(m, n, f) {
         px = m[n][x],
         py = m[n][(x+1)],
         pz = st;
-        p = rot(px,py,pz);
+    p = rot(px,py,pz);
     emit(p.x, p.y, p.z, 1);
   };
 }
-
 
 cache.init(window);
 setup(el, window);
 
 // routes
-function loadpreset(path) {
-  var req = new XMLHttpRequest();
+function loadpreset(name) {
+  var req = new XMLHttpRequest(),
+      path = presets[name];
 
   req.open('GET', path, true);
   req.addEventListener('readystatechange', function() {
@@ -198,3 +265,7 @@ window.stream = function(n,f) {
 window.camera = v.camera;
 window.orientation = orientation;
 window.rot = applyorient;
+window.points = points;
+window.labels = labels;
+window.limits = limits;
+window.presets = presets;
