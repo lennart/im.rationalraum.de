@@ -269,7 +269,6 @@
 	cache.init(window);
 	setup(el, window);
 
-	// routes
 	function loadpreset(name) {
 	  var req = new XMLHttpRequest(),
 	      path = presets[name];
