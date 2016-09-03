@@ -50,7 +50,6 @@ function setup(el, win) {
   var editor = el.querySelector("#editor"),
       button = el.querySelector("#eval"),
       pathname = win.location.pathname;
-
   el.addEventListener('keydown', toggleF);
   preset.addEventListener('change', load);
   input.addEventListener('input', showLast(err));
