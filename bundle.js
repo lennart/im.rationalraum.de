@@ -290,9 +290,7 @@
 	  });
 	  req.send();
 	}
-
 	loadpreset(preset.value);
-
 	// DSL
 	window.v = v;
 	window.m = touchhistory;
