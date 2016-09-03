@@ -1,5 +1,4 @@
 require('mathbox');
-
 var view = require('./view'),
     cache = require('./appcache'),
     css = require('./style.css'),

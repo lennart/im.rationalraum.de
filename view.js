@@ -1,3 +1,4 @@
+require('script!mathbox');
 module.exports = {
   init: function init() {
     // Load mathbox with controls

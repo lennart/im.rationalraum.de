@@ -18,8 +18,7 @@ module.exports = {
   },
   plugins: [
     new AppCachePlugin({
-      cache: ['bower_components/mathbox/build/mathbox-bundle.js',
-              'presets/water.js',
+      cache: ['presets/water.js',
               'presets/points.js',
               'presets/surface.js',
               'presets/ast.js'

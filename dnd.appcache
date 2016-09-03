@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# 6cb458f06d2324315348
+# 239cf085afa082a5537e
 
 3f82c843abadbf48e6c0a51a907e5bc1.js
 0447db372b5cd92341c87144c3981b0a.js
@@ -8,7 +8,6 @@ f211d7fff511aa5f01c9f7063b2cedd0.js
 bundle.js
 
 CACHE:
-bower_components/mathbox/build/mathbox-bundle.js
 presets/water.js
 presets/points.js
 presets/surface.js
