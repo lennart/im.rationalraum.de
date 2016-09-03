@@ -156,7 +156,6 @@
 
 	function toggle() {
 	  var els = [editor, log, err, stats];
-
 	  if (edit) {
 	    edit = false;
 	    els.forEach(hideDOM);
@@ -187,7 +186,6 @@
 
 	function toggleF(e) {
 	  var code = e.keyCode;
-
 	  if (code === 9) {
 	    e.preventDefault(true);
 	    toggle();
