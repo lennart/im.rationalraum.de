@@ -63,7 +63,6 @@ function setup(el, win) {
 
 function load(e) {
   var s = this;
-
   loadpreset(s.value);
 }
 
