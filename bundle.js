@@ -128,7 +128,6 @@
 	  };
 	}
 
-
 	// FIXME: somehow, this will not do what I want and leave labels/points empty afterwards
 	function parseNetwork(text) {
 	  var ast = acorn.parse(text, {
