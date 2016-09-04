@@ -25,8 +25,29 @@ var view = require('./view'),
     stats = document.querySelector("#stats"),
     orientation = [0,0,0],
     limits = [1,1], // one char
+    edit = false,
     controls = false,
-    edit = false;
+    state = Object.defineProperties({}, {
+      "controls": {
+        get: function() { return controls; },
+        set: function(on) {
+          if (on !== controls) {
+            controls = on;
+            el.dispatchEvent(new Event("controls:changed"));
+          }},
+        enumerable: true
+      },
+      "edit": {
+        get: function() { return edit; },
+        set: function(on) {
+          if (on !== edit) {
+            edit = on;
+            el.dispatchEvent(new Event("edit:changed"));
+          }
+        },
+        enumerable: true
+      }
+    });
 
 function orientate(win) {
   if (window.DeviceOrientationEvent) {
@@ -55,6 +76,7 @@ function setup(el, win) {
       pathname = win.location.pathname;
   for (var i = 0; i < controller.length; i++) {
     controller[i].addEventListener('change', controlR);
+    el.addEventListener('controls:changed', reflect(state, "controls", controller[i]));
   }
   el.addEventListener('keydown', toggleF);
   el.addEventListener('keydown', shiftReturn(replaceF));
@@ -62,10 +84,20 @@ function setup(el, win) {
   preset.addEventListener('change', load);
   button.addEventListener('click', replaceF);
   toggler.addEventListener('change', toggleC);
+  el.addEventListener('edit:changed', reflect(state, "edit", toggler));
   orientate(win);
   events.forEach(function(e) {
     el.addEventListener(e, trackF);
   });
+}
+
+function reflect(s, key, el) {
+  return function(e) {
+    var current = s[key];
+    if (current !== el.checked) {
+      el.checked = current;
+    }
+  }
 }
 
 function load(e) {
@@ -90,8 +122,8 @@ function shiftReturn(f) {
 }
 
 function control(on) {
-  controls = on;
-  mathbox.three.controls.enabled = controls;
+  state.controls = on;
+  mathbox.three.controls.enabled = state.controls;
 }
 
 // FIXME: somehow, this will not do what I want and leave labels/points empty afterwards
@@ -121,15 +153,14 @@ function parseNetwork(text) {
 
 function toggle() {
   var els = [editor, log, err, stats];
-  if (edit) {
-    edit = false;
+  if (state.edit) {
+    state.edit = false;
     els.forEach(hideDOM);
   }
   else {
-    edit = true;
+    state.edit = true;
     els.forEach(showDOM);
   }
-
   function showDOM(el) { el.classList.add("enabled"); }
   function hideDOM(el) {
     el.classList.remove("enabled");
@@ -158,7 +189,7 @@ function toggleC(e) {
   var check = this;
 
   toggle();
-  check.checked = edit ? "checked" : null;
+  check.checked = state.edit ? "checked" : null;
 }
 
 function toggleF(e) {
@@ -211,7 +242,7 @@ function applyorient(x, y, z) {
 
 function trackF(e) {
   var i = 0, touches = e.touches, t, x, y, p, a;
-  if (!controls) { // tracking history only updated when not in "lookaround" mode
+  if (!state.controls) { // tracking history only updated when not in "lookaround" mode
     e.preventDefault(true);
     if (!touches) {
       touches = [e];
