@@ -25,6 +25,7 @@ var view = require('./view'),
     stats = document.querySelector("#stats"),
     orientation = [0,0,0],
     limits = [1,1], // one char
+    controls = false,
     edit = false;
 
 function orientate(win) {
@@ -50,16 +51,20 @@ function gofullscreen(el) {
 function setup(el, win) {
   var button = el.querySelector("#eval"),
       toggler = document.querySelector("#edit-toggle"),
+      controller = document.querySelectorAll("[name='controller']"),
       pathname = win.location.pathname;
-  toggler.addEventListener('change', toggleC);
+  for (var i = 0; i < controller.length; i++) {
+    controller[i].addEventListener('change', controlR);
+  }
   el.addEventListener('keydown', toggleF);
-  preset.addEventListener('change', load);
-  input.addEventListener('input', showLast(err));
   el.addEventListener('keydown', shiftReturn(replaceF));
+  input.addEventListener('input', showLast(err));
+  preset.addEventListener('change', load);
   button.addEventListener('click', replaceF);
+  toggler.addEventListener('change', toggleC);
   orientate(win);
   events.forEach(function(e) {
-    el.addEventListener(e, track);
+    el.addEventListener(e, trackF);
   });
 }
 
@@ -82,6 +87,11 @@ function shiftReturn(f) {
       return f.apply(self, [e]);
     }
   };
+}
+
+function control(on) {
+  controls = on;
+  mathbox.three.controls.enabled = controls;
 }
 
 // FIXME: somehow, this will not do what I want and leave labels/points empty afterwards
@@ -139,6 +149,11 @@ function replaceRoot(text) {
   }
 }
 
+function controlR(e) {
+  var on = this.value === "look";
+  control(on);
+}
+
 function toggleC(e) {
   var check = this;
 
@@ -194,12 +209,18 @@ function applyorient(x, y, z) {
   return p;
 }
 
-function track(e) {
+function trackF(e) {
   var i = 0, touches = e.touches, t, x, y, p, a;
-  e.preventDefault(true);
-  if (!touches) {
-    touches = [e];
+  if (!controls) { // tracking history only updated when not in "lookaround" mode
+    e.preventDefault(true);
+    if (!touches) {
+      touches = [e];
+    }
+    track(touches);
   }
+}
+
+function track(touches) {
   for (i = 0; i < Math.min(touchhistory.length, touches.length); i++) {
     t = touches[i];
     x = t.clientX / window.innerWidth;
@@ -242,14 +263,14 @@ function loadpreset(name) {
       }
     }
     else {
-      err.innerText += "[js:err:state <]" + req.readyState + "\n"; 
+      err.innerText += "[js:err:state <]" + req.readyState + "\n";
     }
   });
   req.send();
 }
 cache.init(window);
 setup(el, window);
-
+control(false);
 loadpreset(preset.value);
 // DSL
 window.v = v;

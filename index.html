@@ -29,17 +29,31 @@
   <body>
     <form id="input">
       <output id="log"></output>
-      <select id="preset">
-        <option value="ast">Network</option>        
-        <option value="points">Points</option>
-        <option value="surface">Surface</option>
-        <option value="water">Water</option>                
-      </select>
       <textarea id="editor" autofocus  spellcheck="false">
-    </textarea>
-    <output id="error"></output>
-    <label for="edit-toggle"><input type="checkbox" id="edit-toggle">&nbsp;edit</label>
-    <button type="button" id="eval">eval</button>
+      </textarea>
+      <output id="error"></output>
+      <fieldset id="actions">
+        <legend>Panel</legend>
+        <button type="button" id="eval">eval</button>
+        <label for="preset">
+          preset&nbsp;
+          <select id="preset">
+            <option value="ast">Network</option>
+            <option value="points">Points</option>
+            <option value="surface">Surface</option>
+            <option value="water">Water</option>
+          </select>
+        </label>
+        <label for="draw">
+          <input type="radio" name="controller" id="draw" value="draw" checked="checked">&nbsp;draw
+        </label>
+        <label for="look">
+          <input type="radio" name="controller" id="look" value="look">&nbsp;lookaround
+        </label>
+        <label for="edit-toggle">
+          <input type="checkbox" id="edit-toggle">&nbsp;edit
+        </label>
+      </fieldset>
     </form>
     <script src="/bundle.js"></script>
   </body>

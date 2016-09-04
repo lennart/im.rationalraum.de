@@ -1,16 +1,13 @@
+* {
+  font-family: monospace;
+}
 body {
   user-select: none;
   overflow: hidden;
 }
-
-* {
-  font-family: monospace;
-}
-
 #stats {
   display: none;
 }
-
 #log {
   display: none;
   position: fixed;
@@ -24,16 +21,8 @@ body {
   overflow-x: hidden;
   z-index: 100;
 }
-
 #preset {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  width: 200px;
-  margin-left: -100px;
-  z-index: 100;
 }
-
 #editor {
   display: none;
   position: fixed;
@@ -65,17 +54,15 @@ body {
   font-weight: bold;
   text-shadow: 1px 1px 0 white;
 }
-#eval {
+#actions {
   position: fixed;
   z-index: 1000;
-  right: 0;
   bottom: 0;
+  right: 0;
+}
+#eval {
 }
 label[for="edit-toggle"] {
-  position: fixed;
-  z-index: 1000;
-  right: 100px;
-  bottom: 0;
 }
 #editor.enabled,
 #error.enabled,
