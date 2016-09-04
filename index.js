@@ -25,24 +25,24 @@ var view = require('./view'),
     stats = document.querySelector("#stats"),
     orientation = [0,0,0],
     limits = [1,1], // one char
-    edit = false,
-    controls = false,
+    editing = false,
+    drawing = true,
     state = Object.defineProperties({}, {
-      "controls": {
-        get: function() { return controls; },
+      "drawing": {
+        get: function() { return drawing; },
         set: function(on) {
-          if (on !== controls) {
-            controls = on;
-            el.dispatchEvent(new Event("controls:changed"));
+          if (on !== drawing) {
+            drawing = on;
+            el.dispatchEvent(new Event("drawing:changed"));
           }},
         enumerable: true
       },
-      "edit": {
-        get: function() { return edit; },
+      "editing": {
+        get: function() { return editing; },
         set: function(on) {
-          if (on !== edit) {
-            edit = on;
-            el.dispatchEvent(new Event("edit:changed"));
+          if (on !== editing) {
+            editing = on;
+            el.dispatchEvent(new Event("editing:changed"));
           }
         },
         enumerable: true
@@ -72,19 +72,18 @@ function gofullscreen(el) {
 function setup(el, win) {
   var button = el.querySelector("#eval"),
       toggler = document.querySelector("#edit-toggle"),
-      controller = document.querySelectorAll("[name='controller']"),
+      drawer = document.querySelector("#draw-toggle"),
       pathname = win.location.pathname;
-  for (var i = 0; i < controller.length; i++) {
-    controller[i].addEventListener('change', controlR);
-    el.addEventListener('controls:changed', reflect(state, "controls", controller[i]));
-  }
+  drawer.addEventListener('change', drawF);
+  el.addEventListener('drawing:changed', reflect(state, "drawing", drawer));
   el.addEventListener('keydown', toggleF);
   el.addEventListener('keydown', shiftReturn(replaceF));
+  el.addEventListener('keydown', space(drawF));
   input.addEventListener('input', showLast(err));
   preset.addEventListener('change', load);
   button.addEventListener('click', replaceF);
   toggler.addEventListener('change', toggleC);
-  el.addEventListener('edit:changed', reflect(state, "edit", toggler));
+  el.addEventListener('editing:changed', reflect(state, "editing", toggler));
   orientate(win);
   events.forEach(function(e) {
     el.addEventListener(e, trackF);
@@ -121,9 +120,19 @@ function shiftReturn(f) {
   };
 }
 
-function control(on) {
-  state.controls = on;
-  mathbox.three.controls.enabled = state.controls;
+function space(f) {
+  return function(e) {
+    var self = this
+    if (e.keyCode === 32) {
+      return f.apply(self, [e]);
+    }        
+  };
+}
+
+function draw(on) {
+  state.drawing = on;
+  // when we draw, three is not controlled!
+  mathbox.three.controls.enabled = !state.drawing; 
 }
 
 // FIXME: somehow, this will not do what I want and leave labels/points empty afterwards
@@ -153,12 +162,12 @@ function parseNetwork(text) {
 
 function toggle() {
   var els = [editor, log, err, stats];
-  if (state.edit) {
-    state.edit = false;
+  if (state.editing) {
+    state.editing = false;
     els.forEach(hideDOM);
   }
   else {
-    state.edit = true;
+    state.editing = true;
     els.forEach(showDOM);
   }
   function showDOM(el) { el.classList.add("enabled"); }
@@ -180,16 +189,15 @@ function replaceRoot(text) {
   }
 }
 
-function controlR(e) {
-  var on = this.value === "look";
-  control(on);
+function drawF(e) {
+  draw();
 }
 
 function toggleC(e) {
   var check = this;
 
   toggle();
-  check.checked = state.edit ? "checked" : null;
+  check.checked = state.editing ? "checked" : null;
 }
 
 function toggleF(e) {
@@ -201,7 +209,7 @@ function toggleF(e) {
 }
 
 function replaceF(e) {
-  replaceRoot(editor.value);
+  replaceRoot(eidtor.value);
   input.dispatchEvent(new Event("input"));
   e.preventDefault(true);
 }
@@ -242,7 +250,7 @@ function applyorient(x, y, z) {
 
 function trackF(e) {
   var i = 0, touches = e.touches, t, x, y, p, a;
-  if (!state.controls) { // tracking history only updated when not in "lookaround" mode
+  if (state.drawing) { // tracking history only updated when not in "lookaround" mode
     e.preventDefault(true);
     if (!touches) {
       touches = [e];
@@ -272,9 +280,9 @@ function shuffle($) {
 function emitter(m, n, f) {
   return function (emit, x, y, t) {
     var st = f(t),
-        px = m[n][x],
-        py = m[n][(x+1)],
-        pz = st;
+        px = m[n][x] + st[0],
+        py = m[n][(x+1)] + st[1],
+        pz = st[2];
     p = rot(px,py,pz);
     emit(p.x, p.y, p.z, 1);
   };
@@ -301,7 +309,7 @@ function loadpreset(name) {
 }
 cache.init(window);
 setup(el, window);
-control(false);
+draw(true);
 loadpreset(preset.value);
 // DSL
 window.v = v;
@@ -320,3 +328,9 @@ window.points = points;
 window.labels = labels;
 window.limits = limits;
 window.presets = presets;
+window.sin = Math.sin;
+window.cos = Math.cos;
+window.tan = Math.tan;
+window.sqrt = Math.sqrt;
+window.exp = Math.exp;
+window.floor = Math.floor;
