@@ -48,9 +48,10 @@ function gofullscreen(el) {
 }
 
 function setup(el, win) {
-  var editor = el.querySelector("#editor"),
-      button = el.querySelector("#eval"),
+  var button = el.querySelector("#eval"),
+      toggler = document.querySelector("#edit-toggle"),
       pathname = win.location.pathname;
+  toggler.addEventListener('change', toggleC);
   el.addEventListener('keydown', toggleF);
   preset.addEventListener('change', load);
   input.addEventListener('input', showLast(err));
@@ -138,6 +139,13 @@ function replaceRoot(text) {
   }
 }
 
+function toggleC(e) {
+  var check = this;
+
+  toggle();
+  check.checked = edit ? "checked" : null;
+}
+
 function toggleF(e) {
   var code = e.keyCode;
   if (code === 9) {
@@ -219,14 +227,9 @@ function emitter(m, n, f) {
     emit(p.x, p.y, p.z, 1);
   };
 }
-
-cache.init(window);
-setup(el, window);
-
 function loadpreset(name) {
   var req = new XMLHttpRequest(),
       path = presets[name];
-
   req.open('GET', path, true);
   req.addEventListener('readystatechange', function() {
     if (req.readyState === XMLHttpRequest.DONE) {
@@ -244,6 +247,9 @@ function loadpreset(name) {
   });
   req.send();
 }
+cache.init(window);
+setup(el, window);
+
 loadpreset(preset.value);
 // DSL
 window.v = v;

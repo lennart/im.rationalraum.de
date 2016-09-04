@@ -22,6 +22,7 @@ body {
   font-size: 0.8em;
   width: 10em;
   overflow-x: hidden;
+  z-index: 100;
 }
 
 #preset {
@@ -64,14 +65,18 @@ body {
   font-weight: bold;
   text-shadow: 1px 1px 0 white;
 }
-
 #eval {
   position: fixed;
   z-index: 1000;
   right: 0;
   bottom: 0;
 }
-
+label[for="edit-toggle"] {
+  position: fixed;
+  z-index: 1000;
+  right: 100px;
+  bottom: 0;
+}
 #editor.enabled,
 #error.enabled,
 #log.enabled,
