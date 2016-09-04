@@ -135,6 +135,12 @@ function draw(on) {
   mathbox.three.controls.enabled = !state.drawing; 
 }
 
+function clearNetwork() {
+  // clear existing network
+  labels = [];
+  points = [];
+}
+
 // FIXME: somehow, this will not do what I want and leave labels/points empty afterwards
 function parseNetwork(text) {
   var ast = acorn.parse(text, {
@@ -142,9 +148,6 @@ function parseNetwork(text) {
     sourceFile: text,
     onToken: store(limits)
   });
-  // clear existing network
-  labels = [];
-  points = [];
   function store(lim) {
     return function(token) {
       // store token as x,y coords with origin in top-left
@@ -157,7 +160,17 @@ function parseNetwork(text) {
       points.push(line);
     };
   }
+}
 
+function normalizeNetwork(limits) {
+  points = points.map(function(p,i) {
+    if ((i % 2) === 0) {
+      return points[i] / parseFloat(limits[0]);
+    }
+    else {
+      return points[i] / parseFloat(limits[1]);
+    }
+  });
 }
 
 function toggle() {
@@ -180,7 +193,9 @@ function replaceRoot(text) {
   var res;
   try {
     shuffle(v.$);
+    clearNetwork();
     parseNetwork(text);
+    normalizeNetwork(limits);
     console.log(limits, points, labels);
     res = eval(text);
   }
@@ -209,7 +224,7 @@ function toggleF(e) {
 }
 
 function replaceF(e) {
-  replaceRoot(eidtor.value);
+  replaceRoot(editor.value);
   input.dispatchEvent(new Event("input"));
   e.preventDefault(true);
 }
