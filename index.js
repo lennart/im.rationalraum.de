@@ -33,6 +33,7 @@ var view = require('./view'),
         set: function(on) {
           if (on !== drawing) {
             drawing = on;
+            err.innerText += "[drawing]: " + on + "\n";
             el.dispatchEvent(new Event("drawing:changed"));
           }},
         enumerable: true
@@ -42,6 +43,7 @@ var view = require('./view'),
         set: function(on) {
           if (on !== editing) {
             editing = on;
+            err.innerText += "[editing]: " + on + "\n";
             el.dispatchEvent(new Event("editing:changed"));
           }
         },
@@ -74,11 +76,11 @@ function setup(el, win) {
       toggler = document.querySelector("#edit-toggle"),
       drawer = document.querySelector("#draw-toggle"),
       pathname = win.location.pathname;
-  drawer.addEventListener('change', drawF);
+  drawer.addEventListener('change', drawC);
   el.addEventListener('drawing:changed', reflect(state, "drawing", drawer));
-  el.addEventListener('keydown', toggleF);
+  el.addEventListener('keydown', toggleon(9, toggle));
   el.addEventListener('keydown', shiftReturn(replaceF));
-  el.addEventListener('keydown', space(drawF));
+  el.addEventListener('keydown', toggleon(32, draw));
   input.addEventListener('input', showLast(err));
   preset.addEventListener('change', load);
   button.addEventListener('click', replaceF);
@@ -129,12 +131,6 @@ function space(f) {
   };
 }
 
-function draw(on) {
-  state.drawing = on;
-  // when we draw, three is not controlled!
-  mathbox.three.controls.enabled = !state.drawing; 
-}
-
 function clearNetwork() {
   // clear existing network
   labels = [];
@@ -165,12 +161,27 @@ function parseNetwork(text) {
 function normalizeNetwork(limits) {
   points = points.map(function(p,i) {
     if ((i % 2) === 0) {
-      return points[i] / parseFloat(limits[0]);
+      return ((points[i] / parseFloat(limits[0])) * 2) - 1;
     }
     else {
-      return points[i] / parseFloat(limits[1]);
+      return ((points[i] / parseFloat(limits[1])) * 2) - 1;
     }
   });
+}
+
+function draw() {
+  if (state.drawing) {
+    state.drawing = false;
+  }
+  else {
+    state.drawing = true;
+  }
+  // when we draw, three is not controlled!
+  spectate(!state.drawing)
+}
+
+function spectate(on) {
+  mathbox.three.controls.enabled = on;
 }
 
 function toggle() {
@@ -204,8 +215,12 @@ function replaceRoot(text) {
   }
 }
 
-function drawF(e) {
+
+function drawC(e) {
+  var check = this;
+
   draw();
+  check.checked = state.drawing ? "checked" : null;
 }
 
 function toggleC(e) {
@@ -215,13 +230,16 @@ function toggleC(e) {
   check.checked = state.editing ? "checked" : null;
 }
 
-function toggleF(e) {
-  var code = e.keyCode;
-  if (code === 9) {
-    e.preventDefault(true);
-    toggle();
-  }
+function toggleon(keycode, f) {
+  return function (e) {
+    var code = e.keyCode;
+    if (code === keycode) {
+      e.preventDefault(true);
+      f.apply(f, [e]);
+    }
+  };
 }
+
 
 function replaceF(e) {
   replaceRoot(editor.value);
@@ -241,7 +259,7 @@ function orient(e) {
     orientprime(e);
   }
   else {
-    err.innerText += ('invalid orientation event');
+    err.innerText += ('[err] invalid orientation event\n');
   }
 }
 
@@ -295,8 +313,8 @@ function shuffle($) {
 function emitter(m, n, f) {
   return function (emit, x, y, t) {
     var st = f(t),
-        px = m[n][x] + st[0],
-        py = m[n][(x+1)] + st[1],
+        px = m[n][x] * st[0],
+        py = m[n][(x+1)] * st[1],
         pz = st[2];
     p = rot(px,py,pz);
     emit(p.x, p.y, p.z, 1);
@@ -310,7 +328,7 @@ function loadpreset(name) {
     if (req.readyState === XMLHttpRequest.DONE) {
       if (req.status === 200) {
         err.innerText += "[js:load] " + path + "\n";
-        editor.innerHTML = req.responseText;
+        editor.value = req.responseText;
       }
       else {
         err.innerText += "[js:err:code " + req.status + " <]\n";
@@ -324,7 +342,7 @@ function loadpreset(name) {
 }
 cache.init(window);
 setup(el, window);
-draw(true);
+spectate(false);
 loadpreset(preset.value);
 // DSL
 window.v = v;
@@ -335,6 +353,9 @@ window.viewer = function() {
 };
 window.stream = function(n,f) {
   return emitter(touchhistory, n, f);
+};
+window.ast = function(f) {
+  return emitter([points], 0, f); 
 };
 window.camera = v.camera;
 window.orientation = orientation;
