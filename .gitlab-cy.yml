@@ -1,0 +1,7 @@
+before_script:
+  - npm install
+
+job1:
+  stage: build
+  script:
+  - webpack --optimize-minimize  
