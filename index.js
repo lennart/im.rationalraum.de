@@ -11,12 +11,7 @@ var view = require('./view'),
     },
     v = view.init(),
     el = document.body,
-    lookback = 32,
-    touchhistory = [0,1,2,3,4].map(function(x) { return new Float32Array(lookback); }),
-    ticker = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 },
     events = ['mousemove', 'touchmove'],
-    labels = [],
-    points = [],
     editor = document.querySelector("#editor"),
     err = document.querySelector("#error"),
     log = document.querySelector("#log"),
@@ -25,31 +20,64 @@ var view = require('./view'),
     stats = document.querySelector("#stats"),
     orientation = [0,0,0],
     limits = [1,1], // one char
-    editing = false,
-    drawing = true,
-    state = Object.defineProperties({}, {
-      "drawing": {
-        get: function() { return drawing; },
-        set: function(on) {
-          if (on !== drawing) {
-            drawing = on;
-            err.innerText += "[drawing]: " + on + "\n";
-            el.dispatchEvent(new Event("drawing:changed"));
-          }},
-        enumerable: true
+    state;
+
+function State() {
+  var editing = false,
+      drawing = true,
+      lookback = 256,
+      touchhistory = [0,1,2,3,4].map(function(x) { return new Float32Array(lookback); }),
+      ticker = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 },
+      labels = [],
+      points = [];
+
+  this.past = lookback;
+  this.m = touchhistory;
+  this.ticker = ticker;
+  Object.defineProperties(this, {
+    "drawing": {
+      get: function() { return drawing; },
+      set: function(on) {
+        if (on !== drawing) {
+          drawing = on;
+          err.innerText += "[drawing]: " + on + "\n";
+          el.dispatchEvent(new Event("drawing:changed"));
+        }},
+      enumerable: true
+    },
+    "editing": {
+      get: function() { return editing; },
+      set: function(on) {
+        if (on !== editing) {
+          editing = on;
+          err.innerText += "[editing]: " + on + "\n";
+          el.dispatchEvent(new Event("editing:changed"));
+        }
       },
-      "editing": {
-        get: function() { return editing; },
-        set: function(on) {
-          if (on !== editing) {
-            editing = on;
-            err.innerText += "[editing]: " + on + "\n";
-            el.dispatchEvent(new Event("editing:changed"));
-          }
-        },
-        enumerable: true
-      }
-    });
+      enumerable: true
+    },
+    "labels": {
+      get: function() { return labels; },
+      set: function(l) { if (l != labels) { labels = l; } }
+    },
+    "points": {
+      get: function() { return points; },
+      set: function(p) { if (p != points) { points = p; } }
+    }
+  });
+}
+
+State.prototype.track = function track(touches) {
+  for (i = 0; i < Math.min(this.m.length, touches.length); i++) {
+    t = touches[i];
+    x = t.clientX / window.innerWidth;
+    y = t.clientY / window.innerHeight;
+    this.m[i][advance(this.ticker, i, this.past)] = x;
+    this.m[i][advance(this.ticker, i, this.past)] = 1 - y;    
+  }
+}
+
+state = new State();
 
 function orientate(win) {
   if (window.DeviceOrientationEvent) {
@@ -101,9 +129,14 @@ function reflect(s, key, el) {
   }
 }
 
+function go(text) {
+  editor.value = text;
+  replaceRoot(text);
+}
+
 function load(e) {
   var s = this;
-  loadpreset(s.value);
+  loadpreset(s.value, go);
 }
 
 function showLast(el) {
@@ -133,8 +166,8 @@ function space(f) {
 
 function clearNetwork() {
   // clear existing network
-  labels = [];
-  points = [];
+  state.labels = [];
+  state.points = [];
 }
 
 // FIXME: somehow, this will not do what I want and leave labels/points empty afterwards
@@ -151,21 +184,21 @@ function parseNetwork(text) {
           line = token.loc.start.line;
       lim[0] = Math.max(lim[0], col); // x
       lim[1] = Math.max(lim[1], line); // y
-      labels.push(token.value || token.type.label);
-      points.push(col);
-      points.push(line);
+      state.labels.push((token.value || token.type.label) + " (" + col + ", " + line + ")");
+      state.points.push(col);
+      state.points.push(line);
     };
   }
 }
 
 function normalizeNetwork(limits) {
-  points = points.map(function(p,i) {
-    if ((i % 2) === 0) {
-      return ((points[i] / parseFloat(limits[0])) * 2) - 1;
+  state.points = state.points.map(function(p,i) {
+    if ((i % 2) == 0) {
+      return p / parseFloat(limits[0]);
     }
     else {
-      return ((points[i] / parseFloat(limits[1])) * 2) - 1;
-    }
+      return p / parseFloat(limits[1]);
+    }x
   });
 }
 
@@ -207,8 +240,8 @@ function replaceRoot(text) {
     clearNetwork();
     parseNetwork(text);
     normalizeNetwork(limits);
-    console.log(limits, points, labels);
     res = eval(text);
+    err.innerText += "[eval]\n";
   }
   catch (e) {
     err.innerText += e.toString();
@@ -240,16 +273,16 @@ function toggleon(keycode, f) {
   };
 }
 
-
 function replaceF(e) {
   replaceRoot(editor.value);
   input.dispatchEvent(new Event("input"));
   e.preventDefault(true);
 }
 
-function advance(state, i, size) {
-  state[i] = (state[i] + 1) % size;
-  return state[i];
+function advance(s, i, size) {
+  var current = s[i];
+  s[i] = (s[i] + 1) % size;
+  return current;
 }
 
 function orient(e) {
@@ -274,9 +307,9 @@ function orientprime(e) {
 
 function applyorient(x, y, z) {
   p = new THREE.Vector3(x, y, z);
-  a = new THREE.Euler(orientation[0],
-                      orientation[1],
-                      orientation[2]);
+  a = new THREE.Euler(-orientation[0],
+                      -orientation[1],
+                      -orientation[2]);
   p.applyEuler(a);
   return p;
 }
@@ -288,21 +321,7 @@ function trackF(e) {
     if (!touches) {
       touches = [e];
     }
-    track(touches);
-  }
-}
-
-function track(touches) {
-  for (i = 0; i < Math.min(touchhistory.length, touches.length); i++) {
-    t = touches[i];
-    x = t.clientX / window.innerWidth;
-    x *= 2;
-    x -= 1;
-    y = t.clientY / window.innerHeight;
-    y *= -2;
-    y += 1;
-    touchhistory[i][advance(ticker, i, lookback)] = x;
-    touchhistory[i][advance(ticker, i, lookback)] = y;
+    state.track(touches);
   }
 }
 
@@ -312,15 +331,14 @@ function shuffle($) {
 
 function emitter(m, n, f) {
   return function (emit, x, y, t) {
-    var st = f(t),
-        px = m[n][x] * st[0],
-        py = m[n][(x+1)] * st[1],
-        pz = st[2];
-    p = rot(px,py,pz);
-    emit(p.x, p.y, p.z, 1);
+    var p = rot(m[n][x],m[n][x+1],0.0);
+    l = f(t, m[n][x], m[n][x+1], 1.0);
+    emit(l[0],l[1],l[2],1.0);
   };
 }
-function loadpreset(name) {
+
+function loadpreset(name, done) {
+  if (typeof done !== "function") throw "missing done callback in second argument";
   var req = new XMLHttpRequest(),
       path = presets[name];
   req.open('GET', path, true);
@@ -328,7 +346,7 @@ function loadpreset(name) {
     if (req.readyState === XMLHttpRequest.DONE) {
       if (req.status === 200) {
         err.innerText += "[js:load] " + path + "\n";
-        editor.value = req.responseText;
+        done(req.responseText);
       }
       else {
         err.innerText += "[js:err:code " + req.status + " <]\n";
@@ -340,30 +358,24 @@ function loadpreset(name) {
   });
   req.send();
 }
+
 cache.init(window);
 setup(el, window);
 spectate(false);
-loadpreset(preset.value);
+loadpreset(preset.value, go)
+
 // DSL
 window.v = v;
-window.m = touchhistory;
-window.max = lookback;
 window.viewer = function() {
   return v.viewer(window.innerWidth,window.innerHeight)
 };
-window.stream = function(n,f) {
-  return emitter(touchhistory, n, f);
-};
-window.ast = function(f) {
-  return emitter([points], 0, f); 
-};
+window.s = state;
 window.camera = v.camera;
 window.orientation = orientation;
 window.rot = applyorient;
-window.points = points;
-window.labels = labels;
-window.limits = limits;
-window.presets = presets;
+window.state = state;
+window.limits = limits
+window.presets = state.presets;
 window.sin = Math.sin;
 window.cos = Math.cos;
 window.tan = Math.tan;
