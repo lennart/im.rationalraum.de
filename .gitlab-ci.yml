@@ -1,7 +1,11 @@
 before_script:
   - npm install
 
-job1:
+production:
   stage: build
+  image: alles.was.zerkabelt.de/static-os:latest
   script:
-  - webpack --optimize-minimize  
+    - webpack --optimize-minimize --output-path dist
+  artifacts:
+    paths:
+      - dist
